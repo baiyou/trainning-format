@@ -1,7 +1,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <sys/stat.h>
-
+#include <sys/types.h>
+#include <fcntl.h>
 
 /*
   函数说明：把文件内容取出来，放到一块内存中。
@@ -16,8 +17,20 @@ void *get_file_content(const char *file_name, unsigned long *file_len)
   int         status;
 
   status = stat(file_name, &buffer);
+  
+  *file_len =  buffer.st_size;
+  if (*file_len == 0)
+	return NULL;
+  
+  int f_open = open(file_name, O_RDONLY);
+  if (f_open < 0)
+    exit(1);
 
-  return NULL;
+  void *f_cache = malloc(*file_len);
+  int read_len = read(f_open, f_cache, *file_len);
+  close(f_open);
+
+  return read_len == *file_len? f_cache:NULL;
 }
 
 int main(int argc, char *argv[])
